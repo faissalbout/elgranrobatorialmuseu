@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EL GRAN ROBATORI AL MUSEU</title>
+    <style>
+        /* Donem un fons fosc i misteriós a tota la pàgina */
+        body {
+            background-image: url("images/background-museu.jpg");
+            background-size: cover; 
+            background-attachment: fixed; 
+            background-position: center; 
+            background-color: #0b0c16; 
+            color: #e0e0e0;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        /* Un títol daurat i elegant */
+        h1 {
+            color: #f39c12;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        }
+
+        /* El plànol del museu (el tauler de joc) */
+        #escenari {
+            position: relative;
+            width: 512px;
+            height: 512px;
+            background-image: url("images/mapa-museu.jpg");
+            background-size: cover; 
+            margin: 20px auto;
+            border: 4px solid #f39c12;
+            box-shadow: 0px 0px 25px rgba(0, 0, 0, 0.9);
+        }
+
+        .casella {
+            display: block;
+            position: absolute;
+            width: 64px;
+            height: 64px;
+        }
+
+        /* La pantalla d'informació on surt el text */
+        #sortidaText {
+            width: 400px;
+            margin: 0 auto; 
+            background-color: #0f3460; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 2px solid #e94560; 
+            font-size: 16px;
+            line-height: 1.5; 
+            box-shadow: 0px 0px 15px rgba(233, 69, 96, 0.3); 
+        }
+        
+    </style>
+</head>
+<body>
+
+    <h1 id="Titol">EL GRAN ROBATORI AL MUSEU</h1>
+    
+    <div id="escenari"></div>
+    <p id="sortidaText"></p>
+
+<script>
+
+var escenari = document.querySelector("#escenari");
+var sortidaText = document.querySelector("#sortidaText");
+
+window.addEventListener("keydown", controlTeclat, false);
+
+// Codis d'objecte del mapa per al museu
+var TERRA = 0; 
+var VITRINA_CORONA = 1; 
+var GUARDIA_QUIET = 2; 
+var SORTIDA = 3; 
+var VITRINA_CALAVERA = 6; 
+var VITRINA_EGIPTE = 7; 
+var VITRINA_JOIA = 8;
+var PARET = 9; 
+var LASER_VERTICAL = 10;
+var LASER_CAP_ESQUERRA_SOTA = 11;
+var LASER_HORIZONTAL = 12;
+var LASER_CAP_DRETA_SOTA = 13;
+var LASER_CAP_ESQUERRA_DALT = 14;
+var POCIO_SECRETA = 15;
+var DONUT = 16;
+var LASER_CAP_DRETA_DALT = 17;
+
+// El mapa del joc i nivells
+var nivellActual = 1;
+
+// PIS 1
+var mapa =
+[
+    [16,  2,  0,  0, 15,  9,  3,  3],
+    [ 0,  0,  0,  1,  0,  9,  3,  3],
+    [ 0,  6,  0,  0,  0,  9,  0,  0],
+    [ 0,  0,  0,  0,  2,  0,  0,  0],
+    [ 0,  2,  0,  8,  0, 13, 12, 11],
+    [ 0, 13, 12, 12, 12, 14,  7, 10],
+    [ 0, 10,  0,  2,  0,  0,  0, 10], 
+    [16, 10,  1,  0,  0,  6,  0, 10]  
+];
+
+var objectesJoc = 
+[
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  5,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 4,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0]  
+];
+
+// PIS 2
+var mapaNivell2 =
+[
+    [ 2,  0,  0,  0,  0,  9,  3,  3],
+    [ 0, 13, 12, 11,  0,  9,  3,  3],
+    [ 0, 10,  1, 10,  2,  9,  0,  0],
+    [ 0, 10,  2, 10,  0,  0,  0,  0],
+    [ 0, 10,  0, 17, 12, 12, 12, 12],
+    [16,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  2,  8,  2,  0, 16,  0], 
+    [ 0,  0,  0,  2,  0,  0,  0,  0]  
+];
+
+var objectesNivell2 = 
+[
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0], 
+    [ 0,  0,  0,  0,  0,  0,  0,  5],
+    [ 4,  0,  0,  0,  0,  0,  0,  0]
+];
+
+// PIS 3
+var mapaNivell3 =
+[
+    [16,  0,  0, 10,   7,  9,  3,  3],
+    [ 0,  0,  2, 10,   2,  9,  3,  3],
+    [ 0,  0,  1, 10,   0,  9,  0,  0],
+    [ 0,  0,  2, 10,   0,  0,  8,  0], 
+    [ 0,  0,  0, 17, 12, 12, 12, 12],
+    [16,  2,  0,  0,  0,  0,  0,  0], 
+    [ 0,  0,  0,  0,  0,  0, 16,  0], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0]  
+];
+
+var objectesNivell3 = [
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  5], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 4,  0,  0,  0,  0,  0,  0,  0]  
+];
+
+// PIS 4
+var mapaNivell4 =
+[
+    [ 0,  0,  2,  8,  0,  9,  3,  3],
+    [16, 13, 12, 11,  0,  9,  3,  3],
+    [ 0, 10,  1, 10,  2,  9,  0,  0],
+    [ 0, 10,  2, 10,  0, 13, 12, 11],
+    [ 0, 10,  0, 17, 12, 14,  8, 10], 
+    [16,  2, 16,  2,  0,  0,  0, 10], 
+    [ 0,  0,  8,  0,  8,  0,  0, 17], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0]  
+];
+
+var objectesNivell4 = 
+[ 
+    [ 0,  0,  0,  0,  0,  0,  0,  0], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0], 
+    [ 4,  0,  0,  0,  0,  0,  0,  5] 
+];
+
+// PIS 5 (Nivell Final)
+var mapaNivell5 =
+[
+    [ 8,  2,  8,  2,  8,  9,  3,  3], 
+    [16, 13, 12, 11,  2,  9,  3,  3],
+    [ 0, 10,  7, 10,  0,  9,  0,  0],
+    [ 0, 10, 16, 10,  0,  2,  0,  0],
+    [16, 10,  2, 17, 12, 12, 12, 12],
+    [ 0,  2,  0,  2,  0,  2,  0,  0], 
+    [ 0,  0,  8,  0,  8,  0,  0,  0], 
+    [ 0,  0,  0,  0,  0,  0,  0, 16]  
+];
+
+var objectesNivell5 = [
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 0,  0,  0,  0,  0,  0,  0,  5], 
+    [ 0,  0,  0,  0,  0,  0,  0,  0],
+    [ 4,  0,  0,  0,  0,  0,  0,  0]  
+];
+
+// Codis per als objectes que es mouen
+var LLADRE = 4; 
+var GUARDIA_MOBIL = 5; 
+
+// Direccions del teclat
+var DALT = 38;
+var ABAIX = 40;
+var DRETA = 39;
+var ESQUERRA = 37;
+var W = 87;
+var A = 65;
+var S = 83;
+var D = 68;
+
+// Mides i dimensions
+var MIDA = 64;
+var FILES = mapa.length;
+var COLUMNES = mapa[0].length;
+
+// Posicions a la graella
+var filaLladre;
+var columnaLladre;
+var filaGuardia;
+var columnaGuardia;
+
+// Variables del joc
+var vides = 3; 
+var boti = 0; 
+var donuts = 0; 
+var filaIniciLladre;
+var columnaIniciLladre;
+var inhibidor = false;
+var missatgeJoc = "Recerca per les vitrines per guanyar botí i elimina als guardies quiets amb donuts per obtenir amb un 50% de probabilitats l'inhibidor de laser";
+
+// Trobar on comença el lladre i el guàrdia
+for(var fila = 0; fila < FILES; fila++)
+{
+    for(var columna = 0; columna < COLUMNES; columna++)
+    {
+        if(objectesJoc[fila][columna] === LLADRE){
+            filaLladre = fila;
+            columnaLladre = columna;
+            filaIniciLladre = fila; // Guardem l'inici per quan perdem una vida
+            columnaIniciLladre = columna; 
+        }
+        if(objectesJoc[fila][columna] === GUARDIA_MOBIL){
+            filaGuardia = fila;
+            columnaGuardia = columna;
+        }
+    }
+}
+
+render();
+
+function controlTeclat(event)
+{
+    switch(event.keyCode)
+    {
+        case W:
+        case DALT:
+            if(filaLladre > 0 && mapa[filaLladre - 1][columnaLladre] !== PARET){
+                objectesJoc[filaLladre][columnaLladre] = 0;
+                filaLladre--;
+                objectesJoc[filaLladre][columnaLladre] = LLADRE;
+            }
+        break;
+        
+        case S:
+        case ABAIX:
+            if(filaLladre < FILES - 1 ){
+                objectesJoc[filaLladre][columnaLladre] = 0;
+                filaLladre++;
+                objectesJoc[filaLladre][columnaLladre] = LLADRE;
+            }
+        break;
+        
+        case A:
+        case ESQUERRA:
+            if(columnaLladre > 0 && mapa[filaLladre][columnaLladre - 1] !== PARET){
+                objectesJoc[filaLladre][columnaLladre] = 0;
+                columnaLladre--;
+                objectesJoc[filaLladre][columnaLladre] = LLADRE;
+            }
+        break;
+        
+        case D:
+        case DRETA:
+            if(columnaLladre < COLUMNES - 1 && mapa[filaLladre][columnaLladre + 1] !== PARET) 
+            {
+                objectesJoc[filaLladre][columnaLladre] = 0;
+                columnaLladre++;
+                objectesJoc[filaLladre][columnaLladre] = LLADRE;
+            }
+        break;
+
+        // Ignorar la resta de tecles
+        default:
+            return;
+    }
+
+    // Accions segons la casella fixa on trepitgem
+    switch(mapa[filaLladre][columnaLladre])
+    {
+        case TERRA:
+            missatgeJoc = "Et mous sigil·losament pel museu."
+        break;
+
+        case GUARDIA_QUIET:
+            lluitarGuardia();
+        break;
+
+        case VITRINA_CORONA:
+        case VITRINA_CALAVERA:
+        case VITRINA_EGIPTE:
+        case VITRINA_JOIA:
+            robarVitrina();
+        break;
+
+        case SORTIDA:
+            acabarJoc();
+        break;
+
+        case LASER_VERTICAL:
+        case LASER_HORIZONTAL:
+        case LASER_CAP_ESQUERRA_SOTA:
+        case LASER_CAP_DRETA_SOTA:
+        case LASER_CAP_ESQUERRA_DALT:
+        case LASER_CAP_DRETA_DALT:
+            if (inhibidor === true) 
+            {
+                missatgeJoc = "Ffzzzt! El teu inhibidor ha desactivat aquest làser sense problemes.";
+                mapa[filaLladre][columnaLladre] = TERRA; 
+            } 
+            else 
+            {
+                acabarJoc(); 
+            }
+        break;
+
+        case POCIO_SECRETA:
+            missatgeJoc = "Has trobat la poció secreta! Guanyes una vida extra.";
+            vides++;
+            mapa[filaLladre][columnaLladre] = TERRA;
+        break;
+
+        case DONUT:
+            donuts++;
+            missatgeJoc = "Has trobat un dònut abandonat! Serà perfecte per subornar algun guàrdia.";
+            mapa[filaLladre][columnaLladre] = TERRA;
+        break;
+    }
+
+    moureGuardia();
+
+    if(filaLladre === filaGuardia && columnaLladre === columnaGuardia)
+    {
+        acabarJoc();
+    }
+    else if(filaLladre === filaGuardia && columnaLladre === columnaGuardia)
+    {
+        acabarJoc();
+    }
+
+    render();
+}
+
+function moureGuardia(){
+    var DIRECCIO_DALT = 1;
+    var DIRECCIO_ABAIX = 2;
+    var DIRECCIO_ESQUERRA = 3;
+    var DIRECCIO_DRETA = 4;
+
+    var direccionsValides = [];
+    var direccio = undefined;
+
+    if(filaGuardia > 0)
+    {
+        var casellaDalt = mapa[filaGuardia - 1][columnaGuardia];
+        if (casellaDalt === TERRA) direccionsValides.push(DIRECCIO_DALT); 
+    }
+    if(filaGuardia < FILES - 1)
+    {
+        var casellaAbaix = mapa[filaGuardia + 1][columnaGuardia];
+        if (casellaAbaix === TERRA) direccionsValides.push(DIRECCIO_ABAIX); 
+    }
+     if(columnaGuardia > 0)
+    {
+        var casellaEsquerra = mapa[filaGuardia][columnaGuardia - 1];
+        if (casellaEsquerra === TERRA) direccionsValides.push(DIRECCIO_ESQUERRA); 
+    }
+     if(columnaGuardia < COLUMNES - 1)
+    {
+        var casellaDreta = mapa[filaGuardia][columnaGuardia + 1];
+        if (casellaDreta === TERRA) direccionsValides.push(DIRECCIO_DRETA); 
+    }
+
+    var numeroAleatori = Math.floor(Math.random() * direccionsValides.length);
+    direccio = direccionsValides[numeroAleatori];
+
+    objectesJoc[filaGuardia][columnaGuardia] = 0;
+
+    switch(direccio)
+    {
+        case DIRECCIO_DALT:
+            objectesJoc[--filaGuardia][columnaGuardia] = GUARDIA_MOBIL;
+        break;
+
+        case DIRECCIO_ABAIX:
+            objectesJoc[++filaGuardia][columnaGuardia] = GUARDIA_MOBIL;
+        break;
+
+        case DIRECCIO_ESQUERRA:
+            objectesJoc[filaGuardia][--columnaGuardia] = GUARDIA_MOBIL;
+        break;
+
+        case DIRECCIO_DRETA:
+            objectesJoc[filaGuardia][++columnaGuardia] = GUARDIA_MOBIL;
+        break;
+    }
+}
+
+function lluitarGuardia(){
+    if (donuts > 0) 
+    {
+        donuts--;
+        missatgeJoc = "''Mmm... Dònuts!''<br> El guàrdia es despista menjant i tu passes d'amagat.";
+        mapa[filaLladre][columnaLladre] = TERRA;
+
+        if (Math.random() < 0.5 && inhibidor === false) { 
+            inhibidor = true; //
+            missatgeJoc += "<br>I atenció... Li has pres l'INHIBIDOR DE LÀSER de la butxaca!";
+        }
+    } 
+    else 
+    {
+        acabarJoc(); // Perds una vida de cop o si no en tens doncs acaba el joc
+    }
+}
+
+function robarVitrina(){
+    boti += 500;
+    missatgeJoc = "VITRINA BUIDADA! Afegeixes 500€ al teu botí.";
+    mapa[filaLladre][columnaLladre] = TERRA;
+}
+
+function acabarJoc() {
+    if (mapa[filaLladre][columnaLladre] === SORTIDA) {
+        // Comprovem a quin nivell estem. Si és menor a 5, seguim pujant
+        if (nivellActual < 5) {
+            canviarNivell(); 
+            return; 
+        } else {
+            // Si ja som al pis 5, s'acaba el joc
+            // Redirigim a la pàgina final i li passem els diners robats per la URL per poder llegir el boti a la nova pagina final
+            window.location.href = "final.html?diners=" + boti;
+            return; 
+        }
+    }
+
+    // Si arribem aqui es que hem xocat amb un laser un guardia mobil o un quiet sense tenir donut
+    vides--; 
+
+    if (vides > 0) {
+
+        missatgeJoc = "T'han pillat! Perds una vida. Et queden " + vides + " intents.";
+        
+        // Esborrem el lladre de la casella on ha "mort"
+        objectesJoc[filaLladre][columnaLladre] = TERRA; 
+        
+        // El tornem a posar a l'inici
+        filaLladre = filaIniciLladre;
+        columnaLladre = columnaIniciLladre;
+        objectesJoc[filaLladre][columnaLladre] = LLADRE;
+        
+    } else {
+        // FI DE LA PARTIDA
+        missatgeJoc = "GAME OVER. T'han tancat a la presó d'alta seguretat i t'han confiscat els " + boti + "€.";
+        window.removeEventListener("keydown", controlTeclat, false);
+    }
+}
+
+function canviarNivell() {
+    nivellActual++; // Sumem 1 al pis actual per indicar el pis en el qual estem
+    missatgeJoc = "PIS " + nivellActual + " ASSOLIT! La seguretat és més estricta. Vigila on trepitges!";
+    
+    // Variables temporals per guardar el mapa que toca carregar
+    var nouMapa, nousObjectes;
+
+    // Triem quin mapa carregar segons el pis on hem arribat
+    if (nivellActual === 2) {
+        nouMapa = mapaNivell2; 
+        nousObjectes = objectesNivell2;
+        inhibidor = false;
+    } else if (nivellActual === 3) {
+        nouMapa = mapaNivell3; 
+        nousObjectes = objectesNivell3;
+        inhibidor = false;
+    } else if (nivellActual === 4) {
+        nouMapa = mapaNivell4; 
+        nousObjectes = objectesNivell4;
+        inhibidor = false;
+    } else if (nivellActual === 5) {
+        nouMapa = mapaNivell5; 
+        nousObjectes = objectesNivell5;
+        inhibidor = false;
+        missatgeJoc = "ÚLTIM PIS! Has arribat al final, roba tot el que vegis o escapa per la teulada que esta a la sortida. És ara o mai.";
+    }
+
+    // Copiem el mapa seleccionat a la pantalla principal
+    mapa = JSON.parse(JSON.stringify(nouMapa));
+    objectesJoc = JSON.parse(JSON.stringify(nousObjectes));
+
+    // Tornem a buscar on són el lladre i el guàrdia en aquest nou mapa
+    for(var fila = 0; fila < FILES; fila++) {
+        for(var columna = 0; columna < COLUMNES; columna++) {
+            if(objectesJoc[fila][columna] === LLADRE){
+                filaLladre = fila;
+                columnaLladre = columna;
+                filaIniciLladre = fila; // Guardem el nou punt de reaparició
+                columnaIniciLladre = columna; 
+            }
+            if(objectesJoc[fila][columna] === GUARDIA_MOBIL){
+                filaGuardia = fila;
+                columnaGuardia = columna;
+            }
+        }
+    }
+}
+
+function render()
+{
+    if(escenari.hasChildNodes())
+    {
+        for (var i=0; i < FILES * COLUMNES; i++)
+        {
+            escenari.removeChild(escenari.firstChild);
+        }
+    }
+
+    for(var fila = 0; fila < FILES; fila++)
+    {
+        for(var columna = 0; columna < COLUMNES; columna++)
+            {
+                var casella = document.createElement("img");
+                casella.setAttribute("class", "casella");
+                escenari.appendChild(casella);
+
+                switch(mapa[fila][columna])
+                { 
+                    case TERRA:
+                        casella.src = "";
+                        casella.style.display = "none"; 
+                        break;
+                    case VITRINA_CORONA:
+                        casella.src = "images/corona.png";
+                        break;
+                    case VITRINA_CALAVERA:
+                        casella.src = "images/calavera.png";
+                        break;
+                    case VITRINA_EGIPTE:
+                        casella.src = "images/egipte.png";
+                        break;
+                    case VITRINA_JOIA:
+                        casella.src = "images/joiarara.png";
+                        break;
+                    case GUARDIA_QUIET:
+                        casella.src = "images/guardia.png"; 
+                        break;
+                    case LASER_VERTICAL:
+                        casella.src = "images/laser-vertical.png";
+                        break;
+                    case LASER_HORIZONTAL:
+                        casella.src = "images/laser-horitzontal.png";
+                        break;
+                    case LASER_CAP_DRETA_SOTA:
+                        casella.src = "images/laser-cap-dreta-sota.png";
+                        break;
+                    case LASER_CAP_ESQUERRA_SOTA:
+                        casella.src = "images/laser-cap-esquerra-sota.png";
+                        break;
+                    case LASER_CAP_ESQUERRA_DALT:
+                        casella.src = "images/laser-cap-esquerra-dalt.png";
+                        break;
+                    case LASER_CAP_DRETA_DALT:
+                        casella.src = "images/laser-cap-dreta-dalt.png";
+                        break;
+                    case DONUT:
+                        casella.src = "images/donut.png";
+                        break;
+                    case SORTIDA:
+                        casella.src = "";
+                        casella.style.display = "none";  
+                        break;
+                    case PARET:
+                        casella.src = "";
+                        casella.style.display = "none"; 
+                        break;
+                    case POCIO_SECRETA:
+                        casella.src = "";
+                        casella.style.display = "none"; 
+                        break;
+                }
+                
+                switch(objectesJoc[fila][columna])
+                { 
+                    case LLADRE:
+                        casella.src = "images/lladre.png"; 
+                        casella.style.display = "block";
+                        break;
+                    case GUARDIA_MOBIL:
+                        casella.src = "images/guardia2.png"; 
+                        casella.style.display = "block";
+                        break;
+                }
+
+                casella.style.top = fila * MIDA + "px";
+                casella.style.left = columna * MIDA + "px";
+            }
+    }
+    var textInhibidor = inhibidor ? "Sí" : "No";
+    sortidaText.innerHTML = missatgeJoc;
+    sortidaText.innerHTML += "<br><br>🏢 Pis: " + nivellActual + " | ❤️ Vides: " + vides + " | 💰 Botí: " + boti + "€ | 🍩 Dònuts: " + donuts + "<br> 📟 Inhibidor: " + textInhibidor;
+}
+
+</script>
+</body>
+</html>
