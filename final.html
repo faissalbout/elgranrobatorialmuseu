@@ -90,26 +90,23 @@
     <div class="contenidor-final">
         <h1>VICTÒRIA!</h1>
         
-        <!-- RANURA PER LA FOTO: Posa una imatge a la teva carpeta "images" i canvia el nom aquí si cal -->
         <img src="images/lladre-ric.png" alt="Lladre celebrant amb els bitllets" class="foto-lladre">
         
         <p>Felicitats, ets un gran lladre! Has superat tota la seguretat, has enganyat i esquivat als guàrdies i has pogut escapar per la teulada sense problemes!</p>
         
         <p>T'emportes un botí total de:</p>
-        <!-- Aquest text canviarà automàticament amb JavaScript -->
         <span class="diners" id="textDiners">0€</span>
 
-        <!-- Botó per tornar al menú que vas crear -->
         <button class="boto-tornar" onclick="window.location.href='inici.html'">Tornar al Menú Principal</button>
     </div>
 </body>
 
 <script>
-    // LLegim l'enllaç de la pàgina web per buscar quants diners ens han passat (ex: final.html?diners=4500)
+    // LLegim l'enllaç de la pàgina web per buscar quants diners ens han passat
     var urlParams = new URLSearchParams(window.location.search);
     var dinersRobats = urlParams.get('diners');
         
-    // Si ha arribat el número, el posem a la pantalla
+    // Ara posem el numero a la pantalla
     if(dinersRobats) {
         document.getElementById('textDiners').innerText = dinersRobats + "€";
     } else {
